@@ -1,0 +1,145 @@
+@page "/liveball"
+@using System
+@using System.Threading;
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css"/>
+
+時間 @System.DateTime.Now.ToString("yyyy-MM-dd") <br/>
+球場　@park.Name <br/>
+
+<table class="ui very basic collapsing celled table">
+  <thead>
+    <tr><th>Team</th>
+    @for(int i=0;i<innings;i++)
+    {
+        <th>@(i+1)</th>   
+    }
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <h4 class="ui image header">
+          <img src="@teamGuestLogo" class="ui mini rounded image">
+          <div class="content">
+            @teamGuest
+          </div>
+      </h4></td>
+      @for(int i=0;i<innings;i++)
+      {
+        <td></td>   
+      }
+    </tr>
+    <tr>
+      <td>
+        <h4 class="ui image header">
+          <img src="@teamHomeLogo" class="ui mini rounded image">
+          <div class="content">
+            @teamHome
+        </div>
+      </h4></td>
+      @for(int i=0;i<innings;i++)
+      {
+        <td></td>   
+      }
+    </tr>
+  </tbody>
+</table><p/> 
+
+<button @onclick="StopTracking">停止</button>
+
+<ul>
+    @foreach (string player in playerListHome)
+    {
+        <li>@player</li>
+    }
+</ul>
+
+@code{
+
+    private string teamGuest {get; set;} = string.Empty;
+
+    private string teamGuestLogo {get; set;} = string.Empty;
+
+    private string teamHome {get; set;} = string.Empty;
+
+    private string teamHomeLogo {get; set;} = string.Empty;
+
+    private List<string> playerListHome {get; set;}= new List<string>();
+
+    private Timer trackingTimer {get; set;} = null;
+
+    private int timerInterval = 1000;
+
+    private int delayTimeForInvocation= 1000;
+
+    private const string baseURLLogo = "https://monkeys.rakuten.com.tw/logo/";
+
+    private int innings = 12;
+
+    private BaseballPark park = new BaseballPark(){
+        Name = "桃園國際棒球場",
+        Location = "桃園青埔"
+    };
+
+    private Dictionary<string, string> teams = new Dictionary<string, string>(){
+            {"樂天桃猿", baseURLLogo + "monkey.png"},
+            {"富邦悍將",baseURLLogo + "f.png"},
+            {"統一7-11 獅",baseURLLogo + "l.png"},
+            {"中信兄弟象",baseURLLogo + "e.png"}
+        };
+
+    protected override void OnParametersSet()
+    {
+        this.teamHome = "樂天桃猿";
+        this.teamGuest = "富邦悍將";
+        this.teamHomeLogo = teams[this.teamHome];
+        this.teamGuestLogo = teams[this.teamGuest];
+        base.OnParametersSet();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender){
+           // https://www.syncfusion.com/faq/blazor/general/how-do-i-automatically-refresh-a-component-in-blazor
+           //this.trackingTimer = this.trackingTimer == null ? new Timer(new TimerCallback(TrackGame), null, delayTimeForInvocation, timerInterval) : this.trackingTimer;
+        }
+
+        await Task.Run(() => { return base.OnAfterRenderAsync(firstRender);});
+    }
+
+    private void ArrangePlayer<T>(List<T> team, T name){
+        team.Add(name);
+        Console.WriteLine(name);
+        StateHasChanged();
+    }
+
+    private void StopTracking(){
+
+        if(this.trackingTimer != null) {
+            this.trackingTimer.Dispose();
+            this.trackingTimer = null;
+        }
+    }
+
+    private void TrackGame(Object state)
+    {
+        this.ArrangePlayer<string>(playerListHome, "hi");
+    }
+
+    class BaseballPark {
+        
+        public string Name {get; set; } = string.Empty;
+
+        public string Location {get; set; } = string.Empty;
+    }
+
+    class Innings
+    {
+        public int Number {get; set; } = -1;
+
+        public int ScoreUP {get; set; } = -1;
+
+        public int ScoreBottom {get; set; } = -1;
+    }
+}
